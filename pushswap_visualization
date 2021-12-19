@@ -1,0 +1,188 @@
+#!/usr/bin/env python3
+##
+## EPITECH PROJECT, 2021
+## B-CPE-110-NCE-1-1-pushswap-quentin.briand
+## File description:
+## Visualization by Quentin Briand
+##
+
+import os
+import sys
+import colorsys
+import subprocess
+from tkinter import *
+from random import randint
+from time import sleep, time
+
+if (len(sys.argv) < 2):
+    print("Usage: ./visualization -r [TOTAL]      => to generate a random list of numbers")
+    print("       ./visualization [CUSTOM_LIST]   => to use a custom list of numbers")
+    sys.exit()
+
+if (sys.argv[1] == '-r'):
+    args = [str(randint(1, 100)) for _ in range(int(sys.argv[2]))]
+    print(args)
+else:
+    args = sys.argv[1:]
+
+mode = str(input("Do you want to use an executable (E) or to directly modificate it (D) ?\n"))
+if (mode.upper() == 'E'):
+    RELATIVE_PATH = str(input("Which executable would you like to use ?\n"))
+PADDING_BTW_BAR = 0
+
+def mergeSort(arr):
+    if len(arr) > 1:
+        mid = len(arr)//2
+        L = arr[:mid]  
+        # into 2 halves
+        R = arr[mid:]
+        mergeSort(L)
+        mergeSort(R)  
+        i = j = k = 0
+        while i < len(L) and j < len(R):
+            if L[i] < R[j]:
+                arr[k] = L[i]
+                i += 1
+            else:
+                arr[k] = R[j]
+                j += 1
+            k += 1
+        while i < len(L):
+            arr[k] = L[i]
+            i += 1
+            k += 1
+        while j < len(R):
+            arr[k] = R[j]
+            j += 1
+            k += 1
+
+def hsv_to_rgb(h, s, v):
+    if s == 0.0: return (v, v, v)
+    i = int(h * 6.)
+    f = (h * 6.) - i; p, q, t = v * (1. - s), v * (1. -s * f), v * (1. - s * (1. - f)); i %= 6
+    if i == 0: return (v, t, p)
+    if i == 1: return (q, v, p)
+    if i == 2: return (p, v, t)
+    if i == 3: return (p, q, v)
+    if i == 4: return (t, p, v)
+    if i == 5: return (v, p, q)
+
+pile_a = [int(num) for num in args]
+first_pile = pile_a[:]
+pile_b = []
+ans = pile_a[:]
+mergeSort(ans)
+
+if (mode.upper() == 'E'):
+    dirname = os.path.dirname(os.path.abspath(__file__))
+    PUSHS_PATH = os.path.join(dirname, RELATIVE_PATH)
+    cmds = subprocess.check_output([PUSHS_PATH] + args, stderr=subprocess.STDOUT).decode('utf-8').replace('\n', ' ').split(' ')
+
+hue = 0.0
+length = len(pile_a)
+min_val = min(pile_a) - 10
+max_val = max(pile_a)
+offset = (max_val - min_val)
+
+def launch_cmds(pile_a, pile_b, cmd):
+    if (len(pile_a) >= 2):
+        if cmd == 'sa':
+            pile_a[0], pile_a[1] = pile_a[1], pile_a[0]
+        if cmd == 'ra':
+            pile_a.append(pile_a[0])
+            del pile_a[0]
+        if cmd == 'rra':
+            pile_a = [pile_a[-1]] + pile_a
+            del pile_a[-1]
+    if (len(pile_b) >= 2):
+        if cmd == 'sb':
+            pile_b[0], pile_b[1] = pile_b[1], pile_b[0]
+        if cmd == 'rb':
+            pile_b.append(pile_b[0])
+            del pile_b[0]
+        if cmd == 'rrb' and len(pile_b) >= 2:
+            pile_b = [pile_b[-1]] + pile_b
+            del pile_b[-1]
+    
+    if cmd == 'ss':
+        if (len(pile_a) >= 2):
+            pile_a[0], pile_a[1] = pile_a[1], pile_a[0]
+        if (len(pile_b) >= 2):
+            pile_b[0], pile_b[1] = pile_b[1], pile_b[0]
+    if cmd == 'rr':
+        if (len(pile_a) >= 2):
+            pile_a.append(pile_a[0])
+            del pile_a[0]
+        if (len(pile_b) >= 2):
+            pile_b.append(pile_b[0])
+            del pile_b[0]
+    if cmd == 'rrr':
+        if (len(pile_a) >= 2):
+            pile_a = [pile_a[-1]] + pile_a
+            del pile_a[-1]
+        if (len(pile_b) >= 2):
+            pile_b = [pile_b[-1]] + pile_b
+            del pile_b[-1]
+    if cmd == 'pa' and len(pile_b) >= 1:
+        pile_a = [pile_b[0]] + pile_a
+        del pile_b[0]
+    if cmd == 'pb' and len(pile_a) >= 1:
+        pile_b = [pile_a[0]] + pile_b
+        del pile_a[0]
+    return pile_a, pile_b
+
+length_glo = len(ans)
+def draw():
+    length = len(pile_a)
+    for i in range(0, length):
+        percent = (pile_a[i] - min_val) / offset
+        hue = ans.index(pile_a[i]) / length_glo
+        haut = hauteur_rect * percent
+        (r, g, b) = colorsys.hsv_to_rgb(1 - hue, 0.4, 0.90)
+        rgb_col = (int(255 * r), int(255 * g), int(255 * b))
+        col = '#%02x%02x%02x' % rgb_col
+        c.create_rectangle(largeur_rect * i, c_height, largeur_rect * i + largeur_rect, c_height - haut, fill=col, outline=col)
+
+    length = len(pile_b)
+    for i in range(0, length):
+        percent = (pile_b[i] - min_val) / offset
+        haut = (hauteur_rect * percent)
+        hue = ans.index(pile_b[i]) / length_glo
+        (r, g, b) = colorsys.hsv_to_rgb(1 - hue, 0.4, 0.90)
+        rgb_col = (int(255 * r), int(255 * g), int(255 * b))
+        col = '#%02x%02x%02x' % rgb_col
+        c.create_rectangle(largeur_rect * i, hauteur_rect, largeur_rect + largeur_rect * i, hauteur_rect - haut, fill=col, outline=col)
+
+try:
+    time_input = float(input("What should the delay be ?\n"))
+except ValueError:
+    time_input = 0.
+root = Tk()
+root.title("Push swap vizualisation by Quentin Briand")
+
+c_width = 1000
+c_height = 1000
+c = Canvas(root, width = c_width, height = c_height, bg = "#212121")
+c.pack()
+largeur_rect = c_width / len(args)
+hauteur_rect = (c_height / 2)
+
+i = 0
+len_cmd = 0
+if (mode.upper() == 'E'): len_cmd = len(cmds)
+draw()
+c.update()
+while (i != len_cmd or mode.upper() == 'D'):
+    sleep(time_input)
+    time_var = time()
+    if (mode.upper() == 'E'): 
+        pile_a, pile_b = launch_cmds(pile_a, pile_b, cmds[i])
+    else:
+        pile_a, pile_b = launch_cmds(pile_a, pile_b, str(input("Operation ?\n")))
+    c.delete("all")
+    draw()
+    c.update()
+    i += 1
+
+
+c.mainloop()
