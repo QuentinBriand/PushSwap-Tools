@@ -1,0 +1,70 @@
+#!/usr/bin/env python3
+##
+## EPITECH PROJECT, 2021
+## B-CPE-110-NCE-1-1-pushswap-quentin.briand
+## File description:
+## Plotter to see your PushSwap perfomances
+##
+
+import os
+import subprocess
+from random import randint
+from time import time
+
+print("Checking if MatPlotLib is installed...\n")
+subprocess.call(['pip', 'install', 'matplotlib'], stdout=subprocess.DEVNULL, stderr=subprocess.STDOUT)
+import matplotlib.pyplot as plt
+
+RELATIVE_PATH = [str(input("Which executable would you like to use ?\n"))]
+
+dirname = os.path.dirname(os.path.abspath(__file__))
+
+ans = str(input("By step or TA-like? (S/TA)\n"))
+if (ans.upper() == "S"):
+    total = int(input("How many steps ?\n")) + 1
+    step = int(input("How much is the step ?\n"))
+    num = [i for i in range(0, total * step, step)]
+elif ans.upper() == "TA":
+    num = [10, 50, 100, 500, 1000, 2000, 5000, 10000, 50000, 100000]
+else:
+    num = [int(i) for i in str(input("Give us the list of steps:\t(ex: 10, 12, 48, 56, 79):\n")).split(" ")]
+    num = sorted(list(dict.fromkeys(num)))
+another = "Y"
+while (another.upper() != "N"):
+    another = str(input("Want to test another executable (Y/N))?\n"))
+    if (another.upper() == "Y"):
+        RELATIVE_PATH.append(str(input("Whats his name ?\n")))
+print("")
+y = [[] for _ in range(len(RELATIVE_PATH))]
+
+for i in range(0, len(num)):
+    print("Doing step {} with {} random items...".format(i, num[i]))
+    vals = [str(randint(-2147483648, 2147483647)) for _ in range(0, num[i] + 1)]
+    for i in range(len(RELATIVE_PATH)):
+        PUSH_PATH = os.path.join(dirname, RELATIVE_PATH[i])
+        time_val = time()
+        try:
+            cmds = subprocess.check_output([PUSH_PATH] + vals, stderr=subprocess.STDOUT, timeout = 60)
+            time_spent = time() - time_val
+            print(RELATIVE_PATH[i] + " > Done Successfully in {}".format(time_spent))
+            y[i].append(time_spent)
+        except:
+            y[i].append(0)
+            if (os.path.isfile(RELATIVE_PATH[i])):
+                print(RELATIVE_PATH[i] + " > Timed out after 3 minutes")
+            else:
+                print("Did not succeed to find: " + RELATIVE_PATH[i])
+    print("\n")
+
+for i in range(len(RELATIVE_PATH)):
+    plt.plot(num, y[i], label=RELATIVE_PATH[i], marker="*")
+
+plt.xlabel('Number of items')
+plt.ylabel('Time')
+plt.legend(RELATIVE_PATH)
+ 
+if (len(RELATIVE_PATH) == 1):
+    plt.title('Time for pushswap')
+else:
+    plt.title('Time for pushswaps')
+plt.show()
