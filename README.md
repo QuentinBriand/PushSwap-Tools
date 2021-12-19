@@ -12,7 +12,15 @@ PushSwap Tools ce sont deux outils écrit en python, l'un est fait pour pouvoir 
 * [Visualizer]
 * [Plotter]
 
-## PushSwap
+## Installation
+
+### PushSwap Visualizer
+Blabla visualizer
+
+### PushSwap Plotter
+Blabla plotter
+
+## Utilisation
 
 ### PushSwap Visualizer
 Blabla visualizer
